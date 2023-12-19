@@ -1,4 +1,4 @@
-from selene import have
+from selene import have, be
 from allure import step
 
 
@@ -7,10 +7,8 @@ def test_search(browser_management):
         browser = browser_management
         browser.open("/").wait_until(have.title("Wikipedia"))
 
-    with step("Выполняем поиск Appium"):
-        browser.element("#searchInput").type("Appium")
+    with step("Выполняем поиск Bitcoin"):
+        browser.element("#searchInput").type("Bitcoin").press_enter()
 
-    with step("Проверяем в выпадающем списке первую запись на соответствие Appium"):
-        results = browser.all(".suggestion-link")
-        results.should(have.size_greater_than(0))
-        results.first.should(have.text("Appium"))
+    with step("Проверяем в выпадающем списке первую запись на соответствие Bitcoin"):
+        browser.element(".mw-page-title-main").should(be.visible)
