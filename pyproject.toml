@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "qa-g-mobile-app-tests"
+name = "125-mobile-tests"
 version = "0.1.0"
 description = ""
 authors = ["Vitaliy Zakharov <zak125@mail.ru>"]
 readme = "README.md"
-packages = [{include = "qa_g_mobile_app_tests"}]
+packages = [{include = "125_mobile_tests"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
