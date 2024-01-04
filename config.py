@@ -16,6 +16,7 @@ class Settings(BaseModel):
     app_wait_activity: str = os.getenv("APP_WAIT_ACTIVITY")
     browserstack_app: str = os.getenv("BROWSERSTACK_APP")
     local_emulator_app: str = os.getenv("LOCAL_EMULATOR_APP")
+    mobile_os: str = os.getenv("MOBILE_OS")
     #######
     # remote, local_real, local_emulator
     context: str = os.getenv("CONTEXT")
