@@ -1,10 +1,11 @@
 import allure
 import allure_commons
 import pytest
-import config
+from config import settings
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from appium.options.android import UiAutomator2Options
 from appium.options.ios import XCUITestOptions
 
@@ -16,6 +17,8 @@ from allure import step
 from utils import attach, allure
 
 DEFAULT_BROWSER_VERSION = "100.0"
+DEFAULT_LOCAL_BROWSER_VERSION = "119.0"
+DEFAULT_BROWSER_NAME = "chrome"
 
 
 def pytest_addoption(parser):
@@ -26,26 +29,33 @@ def pytest_addoption(parser):
 def browser_management(request):
     with step("Настраиваем web браузер"):
         browser_version = request.config.getoption("--browser-version")
-        browser_version = (
-            browser_version if browser_version != "" else DEFAULT_BROWSER_VERSION
-        )
-        options = Options()
-        selenoid_capabilities = {
-            "browserName": "chrome",
-            "browserVersion": browser_version,
-            "selenoid:options": {"enableVNC": True, "enableVideo": True},
-        }
-        options.capabilities.update(selenoid_capabilities)
+        if DEFAULT_BROWSER_NAME == "chrome":
+            browser_version = (
+                browser_version if browser_version != "" else DEFAULT_BROWSER_VERSION
+            )
+        elif DEFAULT_BROWSER_NAME == "firefox":
+            browser_version = "119.0"
 
-        driver = webdriver.Remote(
-            command_executor=f"https://{config.SELENOID_USER}:{config.SELENOID_USER_PASSWORD}@selenoid.autotests.cloud/wd/hub",
-            options=options,
-        )
-        browser.config.driver = driver
+        if DEFAULT_BROWSER_NAME == "chrome":
+            options = ChromeOptions()
+        elif DEFAULT_BROWSER_NAME == "chrome":
+            options = FirefoxOptions()
 
-        # browser.config.base_url = config.TEST_WEB_BROWSER_URL
+        if settings.context == "remote":
+            selenoid_capabilities = {
+                "browserName": DEFAULT_BROWSER_NAME,
+                "browserVersion": browser_version,
+                "selenoid:options": {"enableVNC": True, "enableVideo": True},
+            }
+            options.capabilities.update(selenoid_capabilities)
+
+            driver = webdriver.Remote(
+                command_executor=f"https://{settings.selenoid_user}:{settings.selenoid_user_password}@selenoid.autotests.cloud/wd/hub",
+                options=options,
+            )
+            browser.config.driver = driver
+
         browser.config.base_url = "https://www.wikipedia.org"
-        # browser.config.driver_name = os.getenv("driver_name", "chrome")
 
         # coach example:
         # from selenium import webdriver
@@ -53,12 +63,14 @@ def browser_management(request):
         # chrome_options.add_argument('--headless')
         # browser.config.driver_options = chrome_options
 
+        # coach example:
         # browser.config.hold_driver_at_exit = (
         #     os.getenv("hold_driver_at_exit", "false").lower() == "true"
         # )
-        browser.config.window_width = 1920  # os.getenv("window_width", "1920")
-        browser.config.window_height = 1080  # os.getenv("window_height", "1080")
-        browser.config.timeout = 4.0  # float(os.getenv("timeout", "4.0"))
+
+        browser.config.window_width = 1920
+        browser.config.window_height = 1080
+        browser.config.timeout = 4.0
 
         yield browser
 
@@ -71,38 +83,69 @@ def browser_management(request):
 
 
 @pytest.fixture(scope="function")
-def android_mobile_management():
-    options = UiAutomator2Options().load_capabilities(
-        {
-            # Specify device and os_version for testing
-            # 'platformName': 'android',
-            "platformVersion": "9.0",
-            "deviceName": "Google Pixel 3",
-            # Set URL of the application under test
-            "app": "bs://sample.app",
-            # Set other BrowserStack capabilities
-            "bstack:options": {
-                "projectName": "First Python project",
-                "buildName": "browserstack-build-1",
-                "sessionName": "BStack first_test",
-                # Set your access credentials
-                "userName": config.LOGIN_MOBILE,
-                "accessKey": config.PASSWORD_MOBILE,
-            },
-        }
-    )
+def android_app_management():
+    options = UiAutomator2Options()
+    with step("Настраиваем сессию android приложения"):
+        if settings.context == "remote":
+            options.load_capabilities(
+                {
+                    # Specify device and os_version for testing
+                    "platformName": settings.mobile_os,
+                    "platformVersion": "9.0",
+                    "deviceName": "Google Pixel 3",
+                    # Set URL of the application under test
+                    "app": settings.browserstack_app,
+                    # Set other BrowserStack capabilities
+                    "bstack:options": {
+                        "projectName": "Android app tests",
+                        "buildName": "browserstack-build-1",
+                        "sessionName": "BStack first_test",
+                        # Set your access credentials
+                        "userName": settings.login_mobile,
+                        "accessKey": settings.password_mobile,
+                    },
+                }
+            )
+
+            browser.config.driver = webdriver.Remote(
+                settings.remote_mobile_url, options=options
+            )
+            browser.config.timeout = 10.0  # float(os.getenv("timeout", "10.0"))
+            browser.config._wait_decorator = support._logging.wait_with(
+                context=allure_commons._allure.StepContext
+            )
+
+        elif settings.context == "local_emulator":
+            # options.set_capability("platform_name", "android")
+            options.set_capability("app", settings.local_emulator_app)
+            options.set_capability("udid", "emulator-5554")
+            options.set_capability("appWaitActivity", settings.app_wait_activity)
+            # options.set_capability("remote_url", settings.local_mobile_url)
+
+            browser.config.driver = webdriver.Remote(
+                settings.local_mobile_url, options=options
+            )
+            browser.config.timeout = 10.0  # float(os.getenv("timeout", "10.0"))
+            browser.config._wait_decorator = support._logging.wait_with(
+                context=allure_commons._allure.StepContext
+            )
+
+        elif settings.context == "local_real":
+            ...
+            # for example (for realization)
+            # options.set_capability("app", "")
+            # options.set_capability("udid", "")
+            # options.set_capability("appWaitActivity", Settings.app_wait_activity)
+            # options.set_capability("remote_url", "")
+
+            # browser.config.driver = webdriver.Remote("", options=options)
+            # browser.config.timeout = 10.0  # float(os.getenv("timeout", "10.0"))
+            # browser.config._wait_decorator = support._logging.wait_with(
+            #     context=allure_commons._allure.StepContext
+            # )
 
     # browser.config.driver_remote_url = 'http://hub.browserstack.com/wd/hub'
     # browser.config.driver_options = options
-
-    with step("Настраиваем сессию android приложения"):
-        browser.config.driver = webdriver.Remote(
-            config.REMOTE_MOBILE_URL, options=options
-        )
-        browser.config.timeout = 10.0  # float(os.getenv("timeout", "10.0"))
-        browser.config._wait_decorator = support._logging.wait_with(
-            context=allure_commons._allure.StepContext
-        )
 
     yield browser
 
@@ -114,34 +157,42 @@ def android_mobile_management():
     with step("Завершаем сессию android приложения"):
         browser.quit()
 
-    allure.attach_bstack_video(session_id)
+    if settings.context == "remote":
+        allure.attach_bstack_video(session_id)
 
 
 @pytest.fixture(scope="function")
-def ios_mobile_management():
-    options = XCUITestOptions().load_capabilities(
-        {
-            # Specify device and os_version for testing
-            "platformName": "ios",
-            "platformVersion": "16",
-            "deviceName": "iPhone 14",
-            # Set URL of the application under test
-            "app": "bs://444bd0308813ae0dc236f8cd461c02d3afa7901d",
-            # Set other BrowserStack capabilities
-            "bstack:options": {
-                "projectName": "Ios tests",
-                "buildName": "browserstack-simple-app-build",
-                "sessionName": "BStack Simple app test",
-                # Set your access credentials
-                "userName": config.LOGIN_MOBILE,
-                "accessKey": config.PASSWORD_MOBILE,
-            },
-        }
-    )
+def ios_app_management():
+    options = XCUITestOptions()
+    if settings.context == "remote":
+        options.load_capabilities(
+            {
+                # Specify device and os_version for testing
+                "platformName": settings.mobile_os,
+                "platformVersion": "16",
+                "deviceName": "iPhone 14",
+                # Set URL of the application under test
+                "app": "bs://444bd0308813ae0dc236f8cd461c02d3afa7901d",
+                # Set other BrowserStack capabilities
+                "bstack:options": {
+                    "projectName": "Ios tests",
+                    "buildName": "browserstack-simple-app-build",
+                    "sessionName": "BStack Simple app test",
+                    # Set your access credentials
+                    "userName": settings.login_mobile,
+                    "accessKey": settings.password_mobile,
+                },
+            }
+        )
+    elif settings.context == "local_emulator":
+        ...
+
+    elif settings.context == "local_real":
+        ...
 
     with step("Настраиваем сессию ios приложения"):
         browser.config.driver = webdriver.Remote(
-            config.REMOTE_MOBILE_URL, options=options
+            settings.remote_mobile_url, options=options
         )
         browser.config.timeout = 10.0  # float(os.getenv("timeout", "10.0"))
         browser.config._wait_decorator = support._logging.wait_with(
@@ -158,4 +209,5 @@ def ios_mobile_management():
     with step("Завершаем сессию ios приложения"):
         browser.quit()
 
-    allure.attach_bstack_video(session_id)
+    if settings.context == "remote":
+        allure.attach_bstack_video(session_id)
