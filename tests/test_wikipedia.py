@@ -1,15 +1,16 @@
 import pytest
-from config import settings
 from allure_commons._allure import step
 from appium.webdriver.common.appiumby import AppiumBy
 from selene import have
 
+# from config.config import settings
+
 
 @pytest.mark.parametrize("search_text", ["Appium", "Bitcoin"])
-def test_search(android_app_management, search_text):
-    browser = android_app_management
+def test_search(app_management, search_text):
+    browser, settings = app_management
     with step("Пропускаем приветствие"):
-        if settings.context != "remote":
+        if settings.context != "bstack":
             browser.element(
                 (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
             ).click()
@@ -29,10 +30,10 @@ def test_search(android_app_management, search_text):
 
 
 @pytest.mark.parametrize("search_text", ["Appium", "Bitcoin"])
-def test_click_to_search_result(android_app_management, search_text):
-    browser = android_app_management
+def test_click_to_search_result(app_management, search_text):
+    browser, settings = app_management
     with step("Пропускаем приветствие"):
-        if settings.context != "remote":
+        if settings.context != "bstack":
             browser.element(
                 (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
             ).click()
@@ -50,11 +51,8 @@ def test_click_to_search_result(android_app_management, search_text):
         browser.element((AppiumBy.ACCESSIBILITY_ID, search_text))
 
 
-@pytest.mark.xfail(
-    reason="На browserstack сессия начинается со страницы поиска, вероятно может быть исправлено конфигурацией драйвера"
-)
-def test_wikipedia_getting_started_onboarding_screen(android_app_management):
-    browser = android_app_management
+def test_wikipedia_getting_started_onboarding_screen(app_management):
+    browser, settings = app_management
     with step("Проверяем приветственный текст"):
         browser.element((AppiumBy.ID, "org.wikipedia.alpha:id/primaryTextView")).should(
             have.text("The Free Encyclopedia")
