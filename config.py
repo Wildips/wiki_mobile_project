@@ -1,10 +1,9 @@
 import os
 from typing import Literal
+from appium.options.android import UiAutomator2Options
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from appium.options.android import UiAutomator2Options
-from utils import files
-
+from wiki_mobile_tests.utils import files
 
 context_type = Literal["local_emulator", "bstack"]
 

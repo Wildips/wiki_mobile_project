@@ -7,7 +7,7 @@ from selenium import webdriver
 from selene import browser, support
 from appium import webdriver
 from allure import step
-from utils import allure
+from wiki_mobile_tests.utils import allure
 
 
 def pytest_addoption(parser):
