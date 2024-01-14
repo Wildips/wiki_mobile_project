@@ -37,7 +37,7 @@
 
 ![This is an image](/images/notification_example.png)
 
-## Запуск авто-тестов
+#### 8. Запуск авто-тестов
 
 Пример командной строки:
 
@@ -45,11 +45,22 @@
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pytest -vv -l -s . --context=bstack 
+pytest -vv -l -s . --context=$CONTEXT 
 ```
+* '--context' не обязательный параметр имеющий значение по умолчанию<br/> 
+"bstack". Для локального запуска тестов должен иметь значение "local_emulator"
 
 Создание локального отчета:
 
 ```bash
 allure serve allure-results
 ```
+
+## Пример выполнения удаленного теста
+
+![This is an video](/images/demo_test_execution.gif)
+
+
+#### 9. Так же результаты выполнения будут транслированы в Jira
+
+![This is an image](/images/jira_integration.png)
