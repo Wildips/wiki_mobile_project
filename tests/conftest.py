@@ -27,7 +27,7 @@ def context(request):
     return request.config.getoption("--context")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def app_management(context):
     with step("Настраиваем сессию android приложения"):
         options, settings = session_setup(context)

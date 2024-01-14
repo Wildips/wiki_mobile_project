@@ -1,19 +1,15 @@
 import pytest
 from allure_commons._allure import step
 from appium.webdriver.common.appiumby import AppiumBy
-from selene import have
-
-# from config.config import settings
+from selene import browser, have
 
 
 @pytest.mark.parametrize("search_text", ["Appium", "Bitcoin"])
-def test_search(app_management, search_text):
-    browser, settings = app_management
+def test_search(search_text):
     with step("Пропускаем приветствие"):
-        if settings.context != "bstack":
-            browser.element(
-                (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
-            ).click()
+        browser.element(
+            (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
+        ).click()
 
     with step("Вводим искомый текст"):
         browser.element((AppiumBy.ACCESSIBILITY_ID, "Search Wikipedia")).click()
@@ -30,13 +26,11 @@ def test_search(app_management, search_text):
 
 
 @pytest.mark.parametrize("search_text", ["Appium", "Bitcoin"])
-def test_click_to_search_result(app_management, search_text):
-    browser, settings = app_management
+def test_click_to_search_result(search_text):
     with step("Пропускаем приветствие"):
-        if settings.context != "bstack":
-            browser.element(
-                (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
-            ).click()
+        browser.element(
+            (AppiumBy.ID, "org.wikipedia.alpha:id/fragment_onboarding_skip_button")
+        ).click()
 
     with step("Вводим искомый текст"):
         browser.element((AppiumBy.ACCESSIBILITY_ID, "Search Wikipedia")).click()
@@ -54,8 +48,7 @@ def test_click_to_search_result(app_management, search_text):
 @pytest.mark.xfail(
     reason="Причина падения различия в работе приложения локально и на bstack"
 )
-def test_wikipedia_getting_started_onboarding_screen(app_management):
-    browser, settings = app_management
+def test_wikipedia_getting_started_onboarding_screen():
     with step("Проверяем приветственный текст"):
         browser.element((AppiumBy.ID, "org.wikipedia.alpha:id/primaryTextView")).should(
             have.text("The Free Encyclopedia")
