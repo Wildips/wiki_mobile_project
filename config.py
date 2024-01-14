@@ -38,9 +38,10 @@ class Settings(BaseModel):
             options.set_capability("udid", self.udid)
 
         elif context == "bstack":
-            self.app = os.getenv("APP")
-            self.login = os.getenv("LOGIN")
-            self.password = os.getenv("PASSWORD")
+            self.app = os.getenv("app")
+            self.login = os.getenv("login")
+            self.password = os.getenv("password")
+            self.url = os.getenv("url")
 
             options.set_capability("platformVersion", "9.0")
             options.set_capability("deviceName", "Google Pixel 3")
