@@ -2,7 +2,7 @@ import allure
 import allure_commons
 import pytest
 
-from config.config import session_setup
+from config import session_setup
 
 from selenium import webdriver
 
