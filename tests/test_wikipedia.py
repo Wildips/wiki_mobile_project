@@ -45,9 +45,6 @@ def test_click_to_search_result(search_text):
         browser.element((AppiumBy.ACCESSIBILITY_ID, search_text))
 
 
-@pytest.mark.xfail(
-    reason="Причина падения различия в работе приложения локально и на bstack"
-)
 def test_wikipedia_getting_started_onboarding_screen():
     with step("Проверяем приветственный текст"):
         browser.element((AppiumBy.ID, "org.wikipedia.alpha:id/primaryTextView")).should(

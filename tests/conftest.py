@@ -1,15 +1,12 @@
 import allure
 import allure_commons
 import pytest
-
+from dotenv import load_dotenv
 from config import session_setup
-
 from selenium import webdriver
-
 from selene import browser, support
 from appium import webdriver
 from allure import step
-
 from utils import allure
 
 
@@ -20,6 +17,11 @@ def pytest_addoption(parser):
         default="bstack",
         choices=["local_emulator", "bstack"],
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def load_env():
+    load_dotenv()
 
 
 @pytest.fixture
