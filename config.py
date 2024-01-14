@@ -17,46 +17,46 @@ class Settings(BaseModel):
     app: str = False
     udid: str = False
 
+    def session_setup(self, context):
+        if context not in ["local_emulator", "bstack"]:
+            raise RuntimeError(
+                f"Неверный тип контекста, возможны значения: {context_type}"
+            )
+        self.context = context
 
-def session_setup(context):
-    if context not in ["local_emulator", "bstack"]:
-        raise RuntimeError(f"Неверный тип контекста, возможны значения: {context_type}")
+        options = UiAutomator2Options()
+        options.set_capability("appWaitActivity", "org.wikipedia.*")
 
-    options = UiAutomator2Options()
-    options.set_capability("appWaitActivity", "org.wikipedia.*")
+        if context == "local_emulator":
+            load_dotenv(dotenv_path=files.abs_project_file_path(f".env.{context}"))
+            self.app = files.abs_project_file_path(os.getenv("app"))
+            self.url = os.getenv("url")
+            self.udid = os.getenv("udid")
 
-    if context == "local_emulator":
-        load_dotenv(dotenv_path=files.abs_project_file_path(f".env.{context}"))
-        settings = Settings(
-            context=context,
-            url=os.getenv("url"),
-            udid=os.getenv("udid"),
-            app=files.abs_project_file_path(os.getenv("app")),
-        )
+            options.set_capability("app", self.app)
+            options.set_capability("url", self.url)
+            options.set_capability("udid", self.udid)
 
-        options.set_capability("app", settings.app)
-        options.set_capability("url", settings.url)
-        options.set_capability("udid", settings.udid)
+        elif context == "bstack":
+            self.app = os.getenv("app")
+            self.login = os.getenv("login")
+            self.password = os.getenv("password")
 
-    elif context == "bstack":
-        settings = Settings(
-            context=context,
-            login=os.getenv("login"),
-            password=os.getenv("password"),
-            url=os.getenv("url"),
-            app=os.getenv("app"),
-        )
-        options.set_capability("platformVersion", "9.0")
-        options.set_capability("deviceName", "Google Pixel 3")
-        options.set_capability("app", settings.app)
-        options.set_capability(
-            "bstack:options",
-            {
-                "projectName": "First Python project",
-                "buildName": "browserstack-build-1",
-                "sessionName": "BStack first_test",
-                "userName": settings.login,
-                "accessKey": settings.password,
-            },
-        )
-    return options, settings
+            options.set_capability("platformVersion", "9.0")
+            options.set_capability("deviceName", "Google Pixel 3")
+            options.set_capability("app", self.app)
+            options.set_capability(
+                "bstack:options",
+                {
+                    "projectName": "First Python project",
+                    "buildName": "browserstack-build-1",
+                    "sessionName": "BStack first_test",
+                    "userName": self.login,
+                    "accessKey": self.password,
+                },
+            )
+
+        return options
+
+
+settings = Settings(context="local_emulator")

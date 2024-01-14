@@ -2,7 +2,7 @@ import allure
 import allure_commons
 import pytest
 from dotenv import load_dotenv
-from config import session_setup
+from config import settings
 from selenium import webdriver
 from selene import browser, support
 from appium import webdriver
@@ -32,14 +32,14 @@ def context(request):
 @pytest.fixture(scope="function", autouse=True)
 def app_management(context):
     with step("Настраиваем сессию android приложения"):
-        options, settings = session_setup(context)
+        options = settings.session_setup(context)
         browser.config.driver = webdriver.Remote(settings.url, options=options)
         browser.config.timeout = 10.0
         browser.config._wait_decorator = support._logging.wait_with(
             context=allure_commons._allure.StepContext
         )
 
-    yield browser, settings
+        yield browser, settings
 
     allure.attach_bstack_screenshot()
     allure.attach_bstack_page_source()
